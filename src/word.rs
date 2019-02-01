@@ -1,5 +1,3 @@
-use std::process;
-
 // Takes in a pre-defined word, matches it, and carries out its function
 pub fn do_word(w: &String, stack: &mut Vec<i32>) {
     let stack_length = stack.len();

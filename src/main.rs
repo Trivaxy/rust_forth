@@ -48,21 +48,33 @@ fn get_words() -> Option<Vec<String>> {
 // Loop through the code by word and carry it out.
 fn r#do(words: &Vec<String>, stack: &mut Vec<i32>) {
     for w in words {
+        // This variable is just to know whether we should complain about a word being unknown
+        let mut word_exists = false;
+
         // If the word is a number, push it onto the stack - otherwise continue
         match w.parse::<i32>() {
-            Ok(t) => stack.push(t),
+            Ok(t) => {
+                stack.push(t);
+                word_exists = true;
+            },
             Err(_) => ()
         }
 
         // If the word is a mathematical operator, carry it out
         if is_math_op(&w) {
             arithmetic(&w, stack);
+            word_exists = true;
         }
 
         // If the word is a pre-existing forth word, carry out its function
         // Not all forth words are provided, unfortunately. There's way too many
         if word::is_word(&w) {
             word::do_word(&w, stack);
+            word_exists = true;
+        }
+
+        if !word_exists {
+            println!("ERROR: Unknown word {}", w);
         }
     }
 
@@ -98,13 +110,6 @@ fn arithmetic(w: &String, stack: &mut Vec<i32>) {
             stack.pop();
         },
         _ => ()
-    }
-}
-
-// Prints the content of the stack provided
-fn print_stack(s: &Vec<i32>) {
-    for n in (0..s.len()).rev() {
-        println!("{}", s[n]);
     }
 }
 
