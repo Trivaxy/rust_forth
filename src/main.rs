@@ -5,11 +5,18 @@ fn main() {
     println!("Forth interpreter written by Trivaxy, in Rust");
     println!("Not all standard words are provided!\n");
 
-    let words = get_words();
+    let mut stack: Vec<i32> = Vec::new();
 
-    match words {
-        Some(t) => print_stack(&r#do(&t)),
-        None => ()
+    loop {
+        let words = get_words();
+
+        match words {
+            Some(t) => {
+                r#do(&t, &mut stack);
+                print_stack(&stack);
+            },
+            None => ()
+        }
     }
 }
 
@@ -38,9 +45,7 @@ fn get_words() -> Option<Vec<String>> {
 }
 
 // Loop through the code by word and carry it out. Return final stack
-fn r#do(words: &Vec<String>) -> Vec<i32> {
-    let mut stack: Vec<i32> = Vec::new();
-
+fn r#do(words: &Vec<String>, stack: &mut Vec<i32>) {
     for w in words {
         // If the word is a number, push it onto the stack - otherwise continue
         match w.parse::<i32>() {
@@ -50,16 +55,20 @@ fn r#do(words: &Vec<String>) -> Vec<i32> {
 
         // If the word is a mathematical operator, carry it out
         if is_math_op(&w) {
-            arithmetic(&w, &mut stack);
+            arithmetic(&w, stack);
         }
     }
-    stack
 }
 
 // Carries out an arithmetic operation. Takes the stack in as a mutable borrow
 fn arithmetic(w: &String, stack: &mut Vec<i32>) {
     // We have to make a stack_length here otherwise we'll get borrowing errors
     let stack_length = stack.len();
+
+    if stack_length < 2 {
+        println!("ERROR: Attempt to do arithmetic with insufficient numbers on the stack");
+        return;
+    }
 
     match w.as_ref() {
         "+" => {
@@ -84,8 +93,8 @@ fn arithmetic(w: &String, stack: &mut Vec<i32>) {
 
 // Prints the content of the stack provided
 fn print_stack(s: &Vec<i32>) {
-    for n in s {
-        println!("{}", n);
+    for n in (0..s.len()).rev() {
+        println!("{}", s[n]);
     }
 }
 
