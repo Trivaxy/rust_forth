@@ -1,6 +1,8 @@
 use std::vec::Vec;
 use std::io;
 
+pub mod word;
+
 fn main() {
     println!("Forth interpreter written by Trivaxy, in Rust");
     println!("Not all standard words are provided!\n");
@@ -13,7 +15,6 @@ fn main() {
         match words {
             Some(t) => {
                 r#do(&t, &mut stack);
-                print_stack(&stack);
             },
             None => ()
         }
@@ -44,7 +45,7 @@ fn get_words() -> Option<Vec<String>> {
     }
 }
 
-// Loop through the code by word and carry it out. Return final stack
+// Loop through the code by word and carry it out.
 fn r#do(words: &Vec<String>, stack: &mut Vec<i32>) {
     for w in words {
         // If the word is a number, push it onto the stack - otherwise continue
@@ -57,7 +58,16 @@ fn r#do(words: &Vec<String>, stack: &mut Vec<i32>) {
         if is_math_op(&w) {
             arithmetic(&w, stack);
         }
+
+        // If the word is a pre-existing forth word, carry out its function
+        // Not all forth words are provided, unfortunately. There's way too many
+        if word::is_word(&w) {
+            word::do_word(&w, stack);
+        }
     }
+
+    // Finally, print the stack
+    println!("=> {:?}", stack);
 }
 
 // Carries out an arithmetic operation. Takes the stack in as a mutable borrow
@@ -98,7 +108,7 @@ fn print_stack(s: &Vec<i32>) {
     }
 }
 
-// Is +, -, / or * ?
+// Is +, -, * or / ?
 fn is_math_op(s: &str) -> bool {
     if s == "+" || s == "-" || s == "*" || s == "/" {
         return true
