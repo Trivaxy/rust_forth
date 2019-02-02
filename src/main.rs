@@ -1,7 +1,8 @@
 use std::vec::Vec;
-use std::io;
 
-pub mod word;
+pub mod stack;
+
+use stack as st;
 
 fn main() {
     println!("Forth interpreter written by Trivaxy, in Rust");
@@ -10,37 +11,13 @@ fn main() {
     let mut stack: Vec<i32> = Vec::new();
 
     loop {
-        let words = get_words();
+        let words = st::get_words();
 
         match words {
             Some(t) => {
                 r#do(&t, &mut stack);
             },
             None => ()
-        }
-    }
-}
-
-// Returns a list of words from user line input to be passed into the interpreter
-// This is an Option<T> type because in the rare case retrieving fails, we return Option::None
-fn get_words() -> Option<Vec<String>> {
-    let mut line = String::new();
-
-    // Read line. It's type is Result<T>, so we must match for either possible scenario
-    match io::stdin().read_line(&mut line) {
-        // If everything went fine, we'll split string by space, and return valid words as a Option::Some<T>
-        Ok(_) => {
-            let mut words: Vec<String> = Vec::new();
-            for s in line.to_uppercase().split(" ") {
-                if !s.is_empty() {
-                    words.push(s.trim().to_string());
-                }
-            }
-            Some(words)
-        },
-        Err(_) => {
-            println!("Error occurred!");
-            None
         }
     }
 }
@@ -61,15 +38,15 @@ fn r#do(words: &Vec<String>, stack: &mut Vec<i32>) {
         }
 
         // If the word is a mathematical operator, carry it out
-        if is_math_op(&w) {
-            arithmetic(&w, stack);
+        if st::is_math_op(&w) {
+            st::arithmetic(&w, stack);
             word_exists = true;
         }
 
         // If the word is a pre-existing forth word, carry out its function
         // Not all forth words are provided, unfortunately. There's way too many
-        if word::is_word(&w) {
-            word::do_word(&w, stack);
+        if st::is_word(&w) {
+            st::do_word(&w, stack);
             word_exists = true;
         }
 
@@ -80,43 +57,4 @@ fn r#do(words: &Vec<String>, stack: &mut Vec<i32>) {
 
     // Finally, print the stack
     println!("=> {:?}", stack);
-}
-
-// Carries out an arithmetic operation. Takes the stack in as a mutable borrow
-fn arithmetic(w: &String, stack: &mut Vec<i32>) {
-    // We have to make a stack_length here otherwise we'll get borrowing errors
-    let stack_length = stack.len();
-
-    if stack_length < 2 {
-        println!("ERROR: Attempt to do arithmetic with insufficient numbers on the stack");
-        return;
-    }
-
-    match w.as_ref() {
-        "+" => {
-            stack[stack_length - 2] += stack[stack_length - 1];
-            stack.pop();
-        },
-        "-" => {
-            stack[stack_length - 2] -= stack[stack_length - 1];
-            stack.pop();
-        },
-        "*" => {
-            stack[stack_length - 2] *= stack[stack_length - 1];
-            stack.pop();
-        },
-        "/" => {
-            stack[stack_length - 2] /= stack[stack_length - 1];
-            stack.pop();
-        },
-        _ => ()
-    }
-}
-
-// Is +, -, * or / ?
-fn is_math_op(s: &str) -> bool {
-    if s == "+" || s == "-" || s == "*" || s == "/" {
-        return true
-    }
-    false
 }
